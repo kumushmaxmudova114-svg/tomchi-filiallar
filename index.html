@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#3E5C8A" />
+<title>Tomchi Somsa — 5u5 dorixona tarafda</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icons/icon-180.png" />
+<link rel="icon" href="icons/icon-32.png" />
+<style>
+  :root {
+    --bg: #FDFBF7; --card: #FFFFFF; --chip: #F7F3EC; --border: #EEE6D9; --border2: #E4DCCC;
+    --text: #3A2E22; --muted: #8A6F52; --muted2: #A69477; --accent: #3E5C8A; --accent-bg: #E9EEF6;
+    --good-bg: #EEF3E9; --good-text: #4C6B3A; --due-bg: #E9EEF6; --due-text: #3E5C8A;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1E1A16; --card: #2A241E; --chip: #342C24; --border: #40372D; --border2: #4A4033;
+      --text: #F1E9DD; --muted: #C9B499; --muted2: #A99277;
+      --good-bg: #26301F; --good-text: #9BC17E;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 18px 16px 40px; min-height: 100vh; }
+  .center { padding: 60px 20px; text-align: center; color: var(--muted); }
+  .header { margin-bottom: 4px; }
+  .htitle { font-size: 18px; font-weight: 700; }
+  .hsub { font-size: 11px; color: var(--muted2); margin-bottom: 14px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .tabbtn { flex: 1; padding: 9px 0; border-radius: 10px; border: none; cursor: pointer; font-size: 12px; font-weight: 600; background: var(--chip); color: var(--muted); }
+  .tabbtn.active { background: var(--text); color: var(--bg); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 14px; }
+  .statrow { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .stat { background: var(--chip); border-radius: 14px; padding: 12px 14px; flex: 1; min-width: 120px; }
+  .stat .l { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .stat .v { font-size: 19px; font-weight: 700; }
+  .sectionlabel { font-size: 12px; color: var(--muted); margin: 12px 0 8px; font-weight: 600; }
+  .chip { font-size: 11px; background: var(--chip); border-radius: 8px; padding: 4px 9px; color: var(--text); margin: 0 6px 6px 0; display: inline-block; }
+  .row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .row:last-child { border-bottom: none; }
+  .row .name { font-size: 13px; }
+  .qtybtn { width: 26px; height: 26px; border-radius: 8px; border: 1px solid var(--border2); background: var(--chip); color: var(--text); font-size: 15px; cursor: pointer; }
+  .qtyval { width: 22px; text-align: center; font-size: 13px; font-weight: 700; display: inline-block; }
+  textarea { width: 100%; border-radius: 10px; border: 1px solid var(--border2); padding: 9px; font-size: 13px; background: var(--card); color: var(--text); resize: vertical; font-family: inherit; }
+  .submitbtn { background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 11px 18px; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 12px; }
+  .totalrow { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; font-weight: 700; }
+  .err { color: var(--accent); font-size: 12px; margin-top: 8px; }
+  .banner { display: flex; align-items: center; justify-content: space-between; border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; background: var(--good-bg); border: 1px solid var(--good-text); }
+  .banner.due { background: var(--due-bg); border-color: var(--due-text); }
+  .banner .txt { font-size: 12px; color: var(--good-text); }
+  .banner.due .txt { color: var(--due-text); }
+  .banner button { border: none; border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: 700; cursor: pointer; background: var(--card); color: var(--good-text); }
+  .banner.due button { background: var(--accent); color: #fff; }
+  .orderitem { background: var(--chip); border-radius: 10px; padding: 8px 10px; margin-bottom: 6px; font-size: 12px; display: flex; justify-content: space-between; }
+  .needrow { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .needrow:last-of-type { border-bottom: none; }
+  .needrow input { width: 17px; height: 17px; }
+  .needrow span.done { text-decoration: line-through; opacity: 0.55; }
+</style>
+</head>
+<body>
+<div id="app" class="wrap"><div class="center">Yuklanmoqda...</div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCDp2Gs35nbz-zjN-EhT5VouQhIb-Hd-dY",
+  authDomain: "tomchi-somsa-boshqaruv.firebaseapp.com",
+  projectId: "tomchi-somsa-boshqaruv",
+  storageBucket: "tomchi-somsa-boshqaruv.firebasestorage.app",
+  messagingSenderId: "884564157530",
+  appId: "1:884564157530:web:2e38ee4b0ce63da3852463",
+};
+
+const BRANCH_ID = "b3";
+const BRANCH_NAME = "5u5 dorixona tarafda";
+const DEFAULT_NEEDS = ["O'tin", "Go'sht", "Un", "Gaz", "Pomidor", "Piyoz", "Limon"];
+
+const appEl = document.getElementById('app');
+const fmt = (n) => Math.round(n).toLocaleString('ru-RU');
+
+function defaultBranchDoc(name) {
+  return {
+    name,
+    menu: [
+      { id: "m1", name: "Go'shtli somsa (tomchi)", price: 8000, stock: 40 },
+      { id: "m2", name: "Qatlama somsa", price: 9000, stock: 25 },
+    ],
+    drinks: [
+      { id: "d1", name: "Cola", price: 6000 },
+      { id: "d2", name: "Pepsi", price: 6000 },
+      { id: "d3", name: "Fanta", price: 6000 },
+    ],
+    sousPrice: 2000,
+    needsChecked: {},
+    needsExtra: "",
+    orders: [],
+    lastReport: Date.now(),
+  };
+}
+
+let db = null;
+let branch = null;
+let activeTab = 'dashboard';
+let orderDraft = { qty: {}, sousQty: 0, drinkQty: {}, note: "" };
+let needsExtraDraft = null;
+let submitError = "";
+let reportInterval = null;
+
+function stopReportTimer() { if (reportInterval) { clearInterval(reportInterval); reportInterval = null; } }
+function startReportTimer() {
+  stopReportTimer();
+  reportInterval = setInterval(() => {
+    const el = document.getElementById('reportCountdown');
+    const bannerEl = document.getElementById('reportBanner');
+    if (!el || !branch) return;
+    const elapsed = Date.now() - (branch.lastReport || Date.now());
+    const total = 15 * 60 * 1000;
+    const due = elapsed >= total;
+    const remaining = Math.max(0, total - elapsed);
+    const mm = String(Math.floor(remaining / 60000)).padStart(2, '0');
+    const ss = String(Math.floor((remaining % 60000) / 1000)).padStart(2, '0');
+    el.textContent = due ? "Hisobot vaqti keldi — dadamga xabar bering" : `Keyingi hisobotgacha: ${mm}:${ss}`;
+    if (bannerEl) bannerEl.className = due ? 'banner due' : 'banner';
+  }, 1000);
+}
+
+async function ensureDoc() {
+  const ref = doc(db, 'branches', BRANCH_ID);
+  try {
+    const snap = await getDoc(ref);
+    if (!snap.exists()) await setDoc(ref, defaultBranchDoc(BRANCH_NAME));
+    else if (snap.data().name !== BRANCH_NAME) await updateDoc(ref, { name: BRANCH_NAME });
+  } catch (e) { console.error(e); }
+}
+
+function subscribe() {
+  const ref = doc(db, 'branches', BRANCH_ID);
+  onSnapshot(ref, (snap) => {
+    if (!snap.exists()) return;
+    branch = { id: BRANCH_ID, ...snap.data() };
+    render();
+  }, (err) => { appEl.innerHTML = `<div class="center">Ulanishda xatolik: ${err.message}</div>`; });
+}
+
+function render() {
+  if (!branch) { appEl.innerHTML = '<div class="center">Yuklanmoqda...</div>'; return; }
+  const tabs = [
+    { id: 'dashboard', label: 'Panel' },
+    { id: 'order', label: 'Buyurtma' },
+    { id: 'needs', label: 'Ehtiyoj' },
+  ];
+  let content = '';
+  if (activeTab === 'dashboard') content = dashboardHtml();
+  else if (activeTab === 'order') content = orderFormHtml();
+  else content = needsHtml();
+
+  appEl.innerHTML = `
+    <div class="header"><div class="htitle">Tomchi Somsa</div><div class="hsub">${branch.name}</div></div>
+    <div class="tabs">${tabs.map(t => `<button class="tabbtn ${activeTab === t.id ? 'active' : ''}" onclick="actions.setTab('${t.id}')">${t.label}</button>`).join('')}</div>
+    ${activeTab === 'order' ? `<div class="banner" id="reportBanner"><div class="txt" id="reportCountdown">...</div><button onclick="actions.markReported()">Hisobot berdim</button></div>` : ''}
+    ${content}
+  `;
+  if (activeTab === 'order') startReportTimer(); else stopReportTimer();
+}
+
+function dashboardHtml() {
+  const today = new Date().toDateString();
+  const todays = (branch.orders || []).filter(o => new Date(o.time).toDateString() === today);
+  const revenue = todays.reduce((s, o) => s + o.total, 0);
+  return `
+    <div class="statrow">
+      <div class="stat"><div class="l">Buyurtmalar (bugun)</div><div class="v">${todays.length}</div></div>
+      <div class="stat"><div class="l">Tushum (bugun)</div><div class="v">${fmt(revenue)} so'm</div></div>
+    </div>
+    <div class="card">
+      <div class="sectionlabel" style="margin-top:0">Zaxira</div>
+      <div>${branch.menu.map(m => `<span class="chip">${m.name}: <b>${m.stock}</b> ta</span>`).join('')}</div>
+      ${todays.length ? `<div class="sectionlabel">So'nggi buyurtmalar</div>${todays.slice(-5).reverse().map(o => `<div class="orderitem"><span>${o.summary}</span><b>${fmt(o.total)} so'm</b></div>`).join('')}` : '<div class="sectionlabel" style="margin-bottom:0">Bugun hali buyurtma yo\'q</div>'}
+    </div>
+  `;
+}
+
+function rowHtml(name, val, onMinus, onPlus) {
+  return `<div class="row"><div class="name">${name}</div><div style="display:flex;align-items:center;gap:10px">
+    <button class="qtybtn" onclick="${onMinus}">−</button><span class="qtyval">${val}</span><button class="qtybtn" onclick="${onPlus}">+</button>
+  </div></div>`;
+}
+
+function orderFormHtml() {
+  const items = branch.menu.filter(m => (orderDraft.qty[m.id] || 0) > 0);
+  const drinkItems = branch.drinks.filter(d => (orderDraft.drinkQty[d.id] || 0) > 0);
+  const total = items.reduce((s, m) => s + m.price * orderDraft.qty[m.id], 0)
+    + drinkItems.reduce((s, d) => s + d.price * orderDraft.drinkQty[d.id], 0)
+    + (orderDraft.sousQty || 0) * branch.sousPrice;
+  return `
+    <div class="card">
+      <div class="sectionlabel" style="margin-top:0">Somsa</div>
+      ${branch.menu.map(m => rowHtml(`${m.name} — ${fmt(m.price)} so'm`, orderDraft.qty[m.id] || 0, `actions.menuQty('${m.id}',-1)`, `actions.menuQty('${m.id}',1)`)).join('')}
+      <div class="sectionlabel">Sous</div>
+      ${rowHtml(`Sous — ${fmt(branch.sousPrice)} so'm`, orderDraft.sousQty || 0, `actions.sousQty(-1)`, `actions.sousQty(1)`)}
+      <div class="sectionlabel">Ichimlik</div>
+      ${branch.drinks.map(d => rowHtml(`${d.name} — ${fmt(d.price)} so'm`, orderDraft.drinkQty[d.id] || 0, `actions.drinkQty('${d.id}',-1)`, `actions.drinkQty('${d.id}',1)`)).join('')}
+      <div class="sectionlabel">Qo'shimcha</div>
+      <textarea rows="2" placeholder="Masalan: qo'shimcha bir dona salfetka" oninput="actions.noteChange(this.value)">${orderDraft.note || ''}</textarea>
+      ${submitError ? `<div class="err">${submitError}</div>` : ''}
+      <div class="totalrow"><span>Jami:</span><span>${fmt(total)} so'm</span></div>
+      <button class="submitbtn" onclick="actions.submitOrder()">Buyurtmani qabul qilish</button>
+    </div>
+  `;
+}
+
+function needsHtml() {
+  const extraVal = needsExtraDraft !== null ? needsExtraDraft : (branch.needsExtra || '');
+  return `
+    <div class="card">
+      <div class="sectionlabel" style="margin-top:0">Kerakli narsalar</div>
+      ${DEFAULT_NEEDS.map(item => {
+        const checked = !!(branch.needsChecked || {})[item];
+        return `<label class="needrow"><input type="checkbox" ${checked ? 'checked' : ''} onchange="actions.toggleNeed('${item}')" /><span class="${checked ? 'done' : ''}">${item}</span></label>`;
+      }).join('')}
+      <div class="sectionlabel">Qo'shimcha kerakli narsa</div>
+      <textarea rows="3" placeholder="Masalan: yangi qopqoq, salfetka" oninput="actions.extraChange(this.value)">${extraVal}</textarea>
+    </div>
+  `;
+}
+
+const actions = {
+  setTab(t) { activeTab = t; submitError = ''; if (t !== 'needs') needsExtraDraft = null; render(); },
+  menuQty(id, d) { orderDraft.qty[id] = Math.max(0, (orderDraft.qty[id] || 0) + d); render(); },
+  drinkQty(id, d) { orderDraft.drinkQty[id] = Math.max(0, (orderDraft.drinkQty[id] || 0) + d); render(); },
+  sousQty(d) { orderDraft.sousQty = Math.max(0, (orderDraft.sousQty || 0) + d); render(); },
+  noteChange(v) { orderDraft.note = v; },
+  async submitOrder() {
+    if (!branch) return;
+    const items = branch.menu.filter(m => (orderDraft.qty[m.id] || 0) > 0);
+    const drinkItems = branch.drinks.filter(d => (orderDraft.drinkQty[d.id] || 0) > 0);
+    const sousQty = orderDraft.sousQty || 0;
+    if (items.length === 0 && drinkItems.length === 0 && sousQty === 0) { submitError = 'Kamida bitta mahsulot tanlang'; render(); return; }
+    submitError = '';
+    const total = items.reduce((s, m) => s + m.price * orderDraft.qty[m.id], 0)
+      + drinkItems.reduce((s, d) => s + d.price * orderDraft.drinkQty[d.id], 0) + sousQty * branch.sousPrice;
+    const parts = [...items.map(m => `${m.name} x${orderDraft.qty[m.id]}`), ...(sousQty > 0 ? [`Sous x${sousQty}`] : []), ...drinkItems.map(d => `${d.name} x${orderDraft.drinkQty[d.id]}`)];
+    const summary = parts.join(', ') + (orderDraft.note ? ` (${orderDraft.note})` : '');
+    const newMenu = branch.menu.map(m => { const f = items.find(x => x.id === m.id); return f ? { ...m, stock: Math.max(0, m.stock - orderDraft.qty[m.id]) } : m; });
+    const newOrder = { id: Date.now().toString(), time: Date.now(), total, summary };
+    const newOrders = [...(branch.orders || []), newOrder].slice(-50);
+    try { await updateDoc(doc(db, 'branches', BRANCH_ID), { menu: newMenu, orders: newOrders }); }
+    catch (e) { submitError = "Saqlashda xatolik yuz berdi, qayta urinib ko'ring"; render(); return; }
+    orderDraft = { qty: {}, sousQty: 0, drinkQty: {}, note: '' };
+    render();
+  },
+  async toggleNeed(item) {
+    if (!branch) return;
+    const newVal = !(branch.needsChecked || {})[item];
+    try { await updateDoc(doc(db, 'branches', BRANCH_ID), { needsChecked: { [item]: newVal } }); } catch (e) {}
+  },
+  extraChange(v) {
+    needsExtraDraft = v;
+    clearTimeout(actions._t);
+    actions._t = setTimeout(async () => { try { await updateDoc(doc(db, 'branches', BRANCH_ID), { needsExtra: v }); } catch (e) {} }, 700);
+  },
+  async markReported() {
+    try { await updateDoc(doc(db, 'branches', BRANCH_ID), { lastReport: Date.now() }); } catch (e) {}
+  },
+};
+window.actions = actions;
+
+(async function main() {
+  const fbApp = initializeApp(firebaseConfig);
+  db = getFirestore(fbApp);
+  await ensureDoc();
+  subscribe();
+})();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('service-worker.js').catch(() => {}); });
+}
+</script>
+</body>
+</html>
